@@ -160,14 +160,14 @@ module.exports = function inventory (arc) {
       report.tables.push(`${app}-staging-${tablename}`)
       report.tables.push(`${app}-production-${tablename}`)
       var keys = Object.keys(tbl[tablename])
-      var lambdas = keys.filter(k => k === 'insert' || k === 'update' || k === 'destroy')
-      lambdas.forEach(q => {
+      var lambdas = keys.filter(k=> k === 'insert' || k === 'update' || k === 'destroy' || k === 'stream')
+      lambdas.forEach(q=> {
         report.lambdas.push(`${app}-production-${tablename}-${q}`)
         report.lambdas.push(`${app}-staging-${tablename}-${q}`)
         report.types.tables.push(`${tablename}-${q}`)
       })
-      report.localPaths = report.localPaths.concat(lambdas.map(function fmt (q) {
-        return path.join.apply({}, getPath('tables', `${tablename}-${q}`))
+      report.localPaths = report.localPaths.concat(lambdas.map(function fmt(q) {
+        return path.join.apply({}, getPath('tables', q === 'stream' ? tablename : `${tablename}-${q}`))
       }))
     })
   }
