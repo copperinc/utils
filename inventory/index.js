@@ -20,12 +20,13 @@ module.exports = function inventory (arc) {
     websocketapis: [],
     lambdas: [],
     types: {
-      http: [],
-      ws: [],
-      events: [],
-      queues: [],
-      scheduled: [],
-      tables: [],
+      http:[],
+      ws:[],
+      events:[],
+      queues:[],
+      rules:[],
+      scheduled:[],
+      tables:[],
     },
     iamroles: [ 'arc-role' ],
     snstopics: [],
@@ -49,9 +50,9 @@ module.exports = function inventory (arc) {
     }
   }
 
-  function getPath (type, tuple) {
-    if (type === 'scheduled') {
-      return [ 'src', type, tuple[0] ]
+  function getPath(type, tuple) {
+    if (type === 'rules' || type === 'scheduled') {
+      return ['src', type, tuple[0]]
     }
     else if (Array.isArray(tuple)) {
       var verb = tuple[0]
@@ -79,6 +80,12 @@ module.exports = function inventory (arc) {
   // get an sns lambda name
   function getEventName (event) {
     return [ `${app}-production-${event}`, `${app}-staging-${event}` ]
+  }
+
+  // get a rule lambda name
+  function getRuleName(arr) {
+    var name = arr.slice(0).shift()
+    return [`${app}-production-${name}`, `${app}-staging-${name}`]
   }
 
   // get a scheduled lambda name
@@ -142,6 +149,16 @@ module.exports = function inventory (arc) {
     report.localPaths = report.localPaths.concat(arc.queues.map(function fmt (tuple) {
       return path.join.apply({}, getPath('queues', tuple))
     }))
+  }
+
+  if (arc.rules) {
+    let rules = arc.rules.map(getRuleName).slice(0).reduce((a,b)=>a.concat(b))
+    report.lambdas = report.lambdas.concat(rules)
+    report.types.rules = arc.rules.map(a=> a[0])
+    report.localPaths = report.localPaths.concat(arc.rules.map(function fmt(tuple) {
+      return path.join.apply({}, getPath('rules', tuple))
+    }))
+    report.cwerules = rules.slice(0)
   }
 
   if (arc.scheduled) {
